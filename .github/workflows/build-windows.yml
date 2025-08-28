@@ -49,9 +49,9 @@ jobs:
             ADDDATA="$ADDDATA --add-data \"$VOSK_DIR;resources/vosk/pt/vosk-model-small-pt-0.3\""
           fi
           if [ -d "$FRONT_DIR" ]; then
-            ADDDATA="$ADDDATA --add-data \"frontend/dist;frontend/dist\""
+            ADDDATA="$ADDDATA --add-data frontend/dist;frontend/dist"
           elif [ -d "backend/src/static" ]; then
-            ADDDATA="$ADDDATA --add-data \"backend/src/static;static\""
+            ADDDATA="$ADDDATA --add-data backend/src/static;static"
           fi
 
           pyinstaller --clean --onedir --noconsole -n "AntonioRabelo" \
