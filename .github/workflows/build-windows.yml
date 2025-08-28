@@ -54,11 +54,11 @@ jobs:
             ADDDATA="$ADDDATA --add-data \"backend/src/static:static\""
           fi
 
-          pyinstaller --clean --onedir --noconsole -n "AntonioRabelo" ^
-            --icon backend/icon.ico ^
-            --collect-all spacy --collect-all pt_core_news_sm --collect-all sklearn ^
-            --hidden-import "sklearn.utils._cython_blas" --hidden-import "sklearn.utils._openmp_helpers" ^
-            $ADDDATA ^
+          pyinstaller --clean --onedir --noconsole -n "AntonioRabelo" \
+            --icon backend/icon.ico \
+            --collect-all spacy --collect-all pt_core_news_sm --collect-all sklearn \
+            --hidden-import "sklearn.utils._cython_blas" --hidden-import "sklearn.utils._openmp_helpers" \
+            $ADDDATA \
             backend/src/main.py
 
       - name: Copy installer script
