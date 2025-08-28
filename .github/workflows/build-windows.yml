@@ -33,7 +33,7 @@ jobs:
         run: |
           if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
             cd frontend
-            npm ci
+            npm install --legacy-peer-deps
             npm run build
             cd ..
           fi
