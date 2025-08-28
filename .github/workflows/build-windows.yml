@@ -1,0 +1,84 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Install build deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller==6.15.0
+          pip install -r backend/requirements.txt
+          python -m spacy download pt_core_news_sm
+
+      - name: Build frontend (se houver)
+        shell: bash
+        run: |
+          if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+            cd frontend
+            npm ci
+            npm run build
+            cd ..
+          fi
+
+      - name: PyInstaller (onedir, coleta spaCy/sklearn e Vosk)
+        shell: bash
+        run: |
+          VOSK_DIR="backend/resources/vosk/pt/vosk-model-small-pt-0.3"
+          FRONT_DIR="frontend/dist"
+
+          ADDDATA=""
+          if [ -d "$VOSK_DIR" ]; then
+            ADDDATA="$ADDDATA --add-data \"$VOSK_DIR:resources/vosk/pt/vosk-model-small-pt-0.3\""
+          fi
+          if [ -d "$FRONT_DIR" ]; then
+            ADDDATA="$ADDDATA --add-data \"$FRONT_DIR:frontend/dist\""
+          elif [ -d "backend/src/static" ]; then
+            ADDDATA="$ADDDATA --add-data \"backend/src/static:static\""
+          fi
+
+          pyinstaller --clean --onedir --noconsole -n "AntonioRabelo" ^
+            --icon backend/icon.ico ^
+            --collect-all spacy --collect-all pt_core_news_sm --collect-all sklearn ^
+            --hidden-import "sklearn.utils._cython_blas" --hidden-import "sklearn.utils._openmp_helpers" ^
+            $ADDDATA ^
+            backend/src/main.py
+
+      - name: Copy installer script
+        shell: bash
+        run: |
+          mkdir -p dist/installer
+          cp installer/setup.nsi dist/installer/
+
+      - name: Make NSIS installer
+        shell: bash
+        run: |
+          cd dist
+          makensis ..\installer\setup.nsi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-Installer
+          path: |
+            dist/AntonioRabelo/**
+            dist/*.exe
+
+
